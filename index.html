@@ -355,12 +355,40 @@
       .dropzone p { margin: 4px 0 12px; font-size: .95rem; }
       .dropzone p b { color: var(--ink); }
       .dropzone .dz-note { font-size: .82rem; color: var(--ink-faint); margin: 10px 0 0; }
-      .file-chip { display: none; align-items: center; gap: 12px; background: var(--surface-2); border-radius: 10px; padding: 10px 14px; margin-top: 14px; }
-      .file-chip.show { display: flex; }
-      .file-chip .fname { font-weight: 600; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .file-chip .fmeta { color: var(--ink-soft); font-size: .82rem; }
-      .file-chip .chip-actions { display: flex; gap: 8px; flex: none; }
+      .dropzone[hidden] { display: none; }
+      /* Ready state: once a PDF is open, the dropzone steps aside and this
+         success panel takes over Step 2, so "loaded and ready to sign" is
+         unmistakable at a glance. */
+      .file-chip {
+        display: none; align-items: flex-start; gap: 14px;
+        background: var(--accent-soft); border: 1.5px solid var(--accent);
+        border-radius: 12px; padding: 16px;
+      }
+      .file-chip.show { display: flex; animation: chip-in .3s ease; }
+      @keyframes chip-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      .ready-badge {
+        width: 44px; height: 44px; flex: none; border-radius: 50%;
+        background: var(--accent); color: #fff;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .ready-badge svg { width: 24px; height: 24px; }
+      .chip-info { min-width: 0; flex: 1; }
+      .file-chip .fname { font-weight: 700; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .file-chip .fmeta { color: var(--ink-soft); font-size: .85rem; margin-top: 1px; }
+      .file-chip .ready-note { margin: 6px 0 0; font-size: .9rem; font-weight: 600; color: var(--accent-strong); }
+      .file-chip .chip-actions { display: flex; flex-wrap: wrap; gap: 8px; flex: none; }
       .file-chip .chip-actions .btn { min-height: 2.25rem; padding: 5px 12px; font-size: .84rem; }
+      @media (max-width: 560px) {
+        .file-chip { flex-wrap: wrap; }
+        .file-chip .chip-actions { flex-basis: 100%; }
+      }
+      /* One brief accent ring on the editor card when a PDF lands, pulling
+         the eye to the next step. */
+      #placeCard.flash { animation: card-flash 1.6s ease; }
+      @keyframes card-flash {
+        0%, 55% { box-shadow: var(--shadow), 0 0 0 3px var(--accent); border-color: var(--accent); }
+        100% { box-shadow: var(--shadow); }
+      }
 
       /* ---------- Editor ---------- */
       #placeCard { display: block; padding: 0; overflow: hidden; }
@@ -753,13 +781,17 @@
           <input class="hidden-input" type="file" id="fileInput" accept="application/pdf,.pdf" />
           <p class="dz-note" data-i18n="dzNote">Maksimal 30 MB · PDF yang terkunci kata sandi perlu dibuka kuncinya dulu</p>
         </div>
-        <div class="file-chip" id="fileChip">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex:none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <div style="min-width:0;flex:1">
+        <div class="file-chip" id="fileChip" role="status">
+          <span class="ready-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <div class="chip-info">
             <div class="fname" id="fileName">—</div>
             <div class="fmeta" id="fileMeta">—</div>
+            <p class="ready-note" data-i18n="fileReadyNote">Dokumen siap dibubuhi tanda tangan — lanjut ke langkah 3 di bawah untuk menempelnya.</p>
           </div>
           <div class="chip-actions">
+            <button class="btn primary" id="goPlaceBtn" data-i18n="goToPlace">Lanjut ke langkah 3</button>
             <button class="btn" id="replaceBtn" data-i18n="replaceFile">Ganti file</button>
             <button class="btn danger" id="removeFileBtn" data-i18n="removeFile">Hapus</button>
           </div>
@@ -1085,6 +1117,8 @@
             pageInfo: "Halaman {cur} / {total}",
             thumbAria: "Buka halaman {n}",
             fileMeta: "{pages} halaman · {size}",
+            fileReadyNote: "Dokumen siap dibubuhi tanda tangan — lanjut ke langkah 3 di bawah untuk menempelnya.",
+            goToPlace: "Lanjut ke langkah 3",
             noteNoStampSig: "Belum ada stempel di dokumen ini. Pakai tombol “+ Tanda tangan” di atas untuk menempel tanda tangan aktifmu.",
             noteNoStampNoSig: "PDF sudah siap. Buat dulu tanda tanganmu di langkah 1 — atau tambahkan stempel teks/tanggal dari toolbar di atas.",
             noteCount: "{n} stempel di dokumen ini · klik stempel untuk memilih dan mengaturnya.",
@@ -1109,7 +1143,7 @@
             toastAllOn: "Stempel akan muncul di semua halaman.",
             toastAllOff: "Stempel hanya di halaman ini.",
             toastDuplicated: "Stempel diduplikat.",
-            toastPdfOpened: "PDF dibuka: {pages} halaman.",
+            toastPdfOpened: "PDF siap dibubuhi tanda tangan: {pages} halaman.",
             toastDownloaded: "PDF bertanda tangan berhasil diunduh.",
             toastExportFail: "Gagal membuat PDF hasil.",
             errNotPdf: "File itu bukan PDF — pilih file berakhiran .pdf ya.",
@@ -1216,6 +1250,8 @@
             pageInfo: "Page {cur} / {total}",
             thumbAria: "Open page {n}",
             fileMeta: "{pages} pages · {size}",
+            fileReadyNote: "Your document is ready to sign — continue to step 3 below to place your signature.",
+            goToPlace: "Continue to step 3",
             noteNoStampSig: "No stamps on this document yet. Use the “+ Signature” button above to place your active signature.",
             noteNoStampNoSig: "The PDF is ready. Create your signature in step 1 first — or add a text/date stamp from the toolbar above.",
             noteCount: "{n} stamp(s) on this document · click a stamp to select and adjust it.",
@@ -1240,7 +1276,7 @@
             toastAllOn: "The stamp will appear on all pages.",
             toastAllOff: "The stamp is only on this page.",
             toastDuplicated: "Stamp duplicated.",
-            toastPdfOpened: "PDF opened: {pages} pages.",
+            toastPdfOpened: "PDF ready to sign: {pages} pages.",
             toastDownloaded: "Signed PDF downloaded successfully.",
             toastExportFail: "Failed to create the resulting PDF.",
             errNotPdf: "That file is not a PDF — please pick a file ending in .pdf.",
@@ -2071,6 +2107,9 @@
               state.pdfSize = file.size;
               $("fileName").textContent = file.name;
               $("fileMeta").textContent = t("fileMeta", { pages: state.pageCount, size: fmtKB(file.size) });
+              // Step 2 switches to its ready state: the big dropzone steps
+              // aside and the success panel takes its place.
+              $("dropzone").hidden = true;
               $("fileChip").classList.add("show");
               $("placeCard").classList.add("show");
               $("editorEmpty").hidden = true;
@@ -2090,6 +2129,15 @@
                 selectStamp(state.stamps[state.stamps.length - 1].id);
               }
               toast(t("toastPdfOpened", { pages: state.pageCount }));
+              // Point the eye at the next step: glide down to the editor
+              // and ring it once with the accent color.
+              var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+              setTimeout(function () {
+                $("placeCard").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+                $("placeCard").classList.remove("flash");
+                void $("placeCard").offsetWidth;
+                $("placeCard").classList.add("flash");
+              }, 80);
             }).catch(function (err) {
               if (err && err.name === "PasswordException") {
                 setStatusAndToast(t("errPassword"));
@@ -2106,6 +2154,8 @@
           state.stamps = []; state.selectedId = null;
           historyStack = []; historyIdx = -1; pushHistory();
           $("fileChip").classList.remove("show");
+          $("dropzone").hidden = false;
+          $("placeCard").classList.remove("flash");
           $("editorEmpty").hidden = false;
           $("editorMain").hidden = true;
           $("thumbs").innerHTML = "";
@@ -2115,6 +2165,10 @@
         }
 
         $("pickBtn").addEventListener("click", function () { $("fileInput").click(); });
+        $("goPlaceBtn").addEventListener("click", function () {
+          var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          $("placeCard").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+        });
         $("replaceBtn").addEventListener("click", function () { $("fileInput").click(); });
         $("removeFileBtn").addEventListener("click", closePdf);
         $("fileInput").addEventListener("change", function () {
