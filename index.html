@@ -1520,24 +1520,26 @@
 
         /* ================= Draw pad ================= */
         var padCanvas = $("pad");
-        /* Pen presets — each pairs a width range with how strongly the
-           width reacts to hand speed (velocityFilterWeight):
-           fountain varies a lot (thin fast strokes, tapered ends),
-           marker barely varies (near-constant bold line), brush is
-           wide with very smooth width transitions. The Thickness and
+        /* Pen presets — each pairs a width range with vfw, the weight
+           the raw hand speed gets in the stroke-width calculation
+           (lower = width follows averaged speed = steadier line):
+           fountain gets the highest weight so its width still tapers
+           responsively, brush the lowest for the softest transitions,
+           marker's range is near-constant anyway. The Thickness and
            Smoothness sliders scale each preset: thickness multiplies
-           the width range, smoothness sets the velocity smoothing and
-           sampling density (throttle / minDistance); stroke caps stay
-           round, so lines stay smooth instead of jagged.
+           the width range, smoothness lowers vfw, densifies sampling
+           (throttle / minDistance) and stiffens the position
+           stabilizer below; stroke caps stay round, so lines stay
+           smooth instead of jagged.
            mouseRange is the share of the
            width range kept when a stroke comes from a mouse, whose
            unfiltered speed swings would otherwise make the line width
            jump around (see applyPenSettings and the mouse layer). */
         var PEN_PRESETS = {
-          standard: { minBase: 0.65, maxBase: 2.8, vel: 0.70, mouseRange: 0.45 },
-          fountain: { minBase: 0.12, maxBase: 3.9, vel: 0.45, mouseRange: 0.65 },
-          brush: { minBase: 1.05, maxBase: 4.9, vel: 0.88, mouseRange: 0.70 },
-          marker: { minBase: 2.95, maxBase: 3.35, vel: 0.92, mouseRange: 1 }
+          standard: { minBase: 0.65, maxBase: 2.8, vfw: 0.34, mouseRange: 0.45 },
+          fountain: { minBase: 0.12, maxBase: 3.9, vfw: 0.44, mouseRange: 0.65 },
+          brush: { minBase: 1.05, maxBase: 4.9, vfw: 0.24, mouseRange: 0.70 },
+          marker: { minBase: 2.95, maxBase: 3.35, vfw: 0.30, mouseRange: 1 }
         };
         var PEN_DESC_KEYS = {
           standard: "penDescStandard", fountain: "penDescFountain",
@@ -1569,11 +1571,11 @@
           var scale = thickStep / 5;
           var maxW = preset.maxBase * scale;
           var minW = preset.minBase * scale;
-          // Smoother = width changes ease in more gently and points are
-          // sampled more densely, so curves don't break into segments.
-          // The top of the range leans much harder on the velocity
-          // history, which is what makes strokes feel liquid-smooth.
-          var vfw = clamp(preset.vel + (smooth - 65) * 0.0045, 0.15, 0.97);
+          // velocityFilterWeight is the weight given to the RAW
+          // velocity in the width calculation (the rest is history),
+          // so smoother must mean a LOWER weight: the width then
+          // follows the averaged velocity and stops rippling.
+          var vfw = clamp(preset.vfw - (smooth - 65) * 0.0035, 0.07, 0.8);
           var thr = Math.round(clamp(12 - smooth * 0.12, 0, 12));
           var minD = clamp(5 - smooth * 0.045, 0.5, 5);
           if (lastPointerType === "mouse") {
@@ -1587,7 +1589,7 @@
             var halfW = (maxW - minW) / 2 * (preset.mouseRange != null ? preset.mouseRange : 0.55);
             maxW = midW + halfW;
             minW = Math.max(0.08, midW - halfW);
-            vfw = clamp(vfw * 0.6, 0.08, 0.95);
+            vfw = clamp(vfw * 0.75, 0.06, 0.8);
             thr = 0;
             minD = 1;
           }
@@ -1640,7 +1642,7 @@
           $("useDrawBtn").disabled = empty;
           $("redoBtn").disabled = padRedoStack.length === 0;
         }
-        pad.addEventListener("beginStroke", function () { padRedoStack = []; });
+        pad.addEventListener("beginStroke", function () { padRedoStack = []; resetStabilizer(); });
         pad.addEventListener("endStroke", padChanged);
         $("undoBtn").addEventListener("click", function () {
           var data = pad.toData();
@@ -1686,11 +1688,51 @@
         var mouseStrokeActive = false;
         var lastFedPoint = null; // {x, y, t} client coords / epoch ms
         var feedTimeOverride = null;
-        if (mouseLayerOk && typeof pad._createPoint === "function") {
+        /* ---------- Stroke stabilizer (tremor filter) ----------
+           Everything above only ever smoothed the stroke WIDTH; the
+           point POSITIONS were the raw pointer coordinates, so hand
+           tremor and mouse jitter passed straight into the rendered
+           path as a fine ripple along every stroke — visible even at
+           Smoothness 100, worst on long, slow, open curves. This
+           stabilizer sits in _createPoint, the one funnel every live
+           point passes through (mouse layer, touch and stylus alike;
+           fromData redraws build points directly and stay untouched),
+           and runs a rope/spring filter over the positions: the
+           rendered point trails the real one on a short elastic.
+           Small, slow movements — tremor — are mostly absorbed by the
+           rope, while fast, deliberate movements stretch it and are
+           followed almost exactly, so stroke ends don't feel laggy.
+           The Smoothness slider sets the rope's base stiffness, with
+           a firm floor: even at low settings the micro-ripple is
+           filtered out. Sub-pixel remainders are suppressed outright.
+           State resets on every beginStroke. */
+        var stab = { on: false, x: 0, y: 0 };
+        function resetStabilizer() { stab.on = false; }
+        function stabilizerStep(pt) {
+          if (!stab.on) {
+            stab.on = true; stab.x = pt.x; stab.y = pt.y;
+            return;
+          }
+          var dx = pt.x - stab.x, dy = pt.y - stab.y;
+          var dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 0) {
+            var smooth = parseFloat(smoothRange.value);
+            if (isNaN(smooth)) smooth = 65;
+            var a = 0.62 - smooth * 0.0042;
+            if (lastPointerType === "mouse") a *= 0.8;
+            var follow = Math.min(1, dist / 40);
+            a = a + (1 - a) * follow * follow;
+            if (dist < 1) a *= dist;
+            stab.x += dx * a; stab.y += dy * a;
+          }
+          pt.x = stab.x; pt.y = stab.y;
+        }
+        if (typeof pad._createPoint === "function") {
           var origCreatePoint = pad._createPoint.bind(pad);
           pad._createPoint = function (x, y, pressure) {
             var pt = origCreatePoint(x, y, pressure);
             if (feedTimeOverride != null) pt.time = feedTimeOverride;
+            stabilizerStep(pt);
             return pt;
           };
         }
@@ -1738,7 +1780,19 @@
             feedMousePoint(samples[i].clientX, samples[i].clientY, samples[i].pressure, performance.timeOrigin + samples[i].timeStamp);
           }
         }, true);
-        function endMouseStroke() { mouseStrokeActive = false; lastFedPoint = null; }
+        function endMouseStroke(e) {
+          if (mouseStrokeActive && e && e.type === "pointerup" && typeof e.clientX === "number") {
+            // Settle the stabilizer rope on the true lift-off point
+            // (this capture-phase handler runs before the pad ends
+            // the stroke) so the tail lands where the hand actually
+            // stopped instead of trailing a few pixels behind it.
+            var t0 = performance.timeOrigin + e.timeStamp;
+            for (var i = 1; i <= 6; i++) {
+              feedMousePoint(e.clientX, e.clientY, e.pressure || 0, t0 + i * 2);
+            }
+          }
+          mouseStrokeActive = false; lastFedPoint = null;
+        }
         window.addEventListener("pointerup", endMouseStroke, true);
         window.addEventListener("pointercancel", endMouseStroke, true);
 
