@@ -661,8 +661,8 @@
             </div>
             <div class="slider-group">
               <label class="tool-lbl" for="smoothRange" data-i18n="smoothnessLabel">Kehalusan</label>
-              <input type="range" id="smoothRange" min="0" max="100" step="1" value="65" />
-              <span class="slider-val" id="smoothVal">65</span>
+              <input type="range" id="smoothRange" min="0" max="100" step="1" value="100" />
+              <span class="slider-val" id="smoothVal">100</span>
             </div>
           </div>
           <div class="pad-frame" id="padFrame">
@@ -1558,14 +1558,14 @@
         });
         // Pen tuning comes from the two sliders: thickness 1–10 maps to
         // a width scale of 0.2–2.0 (default 5 = scale 1.0, each preset's
-        // natural size) and smoothness 0–100 (default 65) drives the
+        // natural size) and smoothness 0–100 (default 100) drives the
         // velocity smoothing and sampling density below.
         var thicknessRange = $("thicknessRange");
         var smoothRange = $("smoothRange");
         function applyPenSettings() {
           var preset = PEN_PRESETS[currentPen] || PEN_PRESETS.standard;
           var smooth = parseFloat(smoothRange.value);
-          if (isNaN(smooth)) smooth = 65;
+          if (isNaN(smooth)) smooth = 100;
           var thickStep = parseFloat(thicknessRange.value);
           if (isNaN(thickStep)) thickStep = 5;
           var scale = thickStep / 5;
@@ -1717,7 +1717,7 @@
           var dist = Math.sqrt(dx * dx + dy * dy);
           if (dist > 0) {
             var smooth = parseFloat(smoothRange.value);
-            if (isNaN(smooth)) smooth = 65;
+            if (isNaN(smooth)) smooth = 100;
             var a = 0.62 - smooth * 0.0042;
             if (lastPointerType === "mouse") a *= 0.8;
             var follow = Math.min(1, dist / 40);
