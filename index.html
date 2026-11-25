@@ -263,8 +263,7 @@
       .color-name i { width: 11px; height: 11px; border-radius: 50%; display: block; border: 1px solid var(--line-strong); flex: none; }
       .spacer { flex: 1; }
       input[type="range"] { accent-color: var(--accent); }
-      .thick { display: inline-flex; align-items: center; gap: 8px; }
-      .thick input[type="range"] { width: 96px; min-height: 2.5rem; }
+
 
       /* ---------- Pen presets ---------- */
       .pen-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 12px; }
@@ -663,12 +662,6 @@
               <button class="swatch" data-color="#7c2d12" aria-pressed="false" aria-label="Tinta cokelat"><i style="background:#7c2d12"></i></button>
               <span class="color-name" id="drawColorName"><i style="background:#111111"></i><span>Hitam</span></span>
             </div>
-            <label class="thick"><span class="tool-lbl" data-i18n="thickness">Ketebalan</span>
-              <input type="range" id="thickRange" min="1" max="10" step="1" value="5" aria-label="Ketebalan goresan" />
-            </label>
-            <label class="thick"><span class="tool-lbl" data-i18n="smoothness">Kehalusan</span>
-              <input type="range" id="smoothRange" min="0" max="100" step="5" value="65" aria-label="Kehalusan goresan" />
-            </label>
             <div class="spacer"></div>
             <button class="btn" id="undoBtn" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
@@ -1029,10 +1022,9 @@
             sigSub: "Gambar dengan mouse, jari, atau stylus — goresannya halus mengikuti kecepatan tanganmu, seperti menulis di kertas. Tanda tangan yang kamu buat tersimpan di daftar di bawah dan bisa dipakai berkali-kali selama halaman ini terbuka.",
             tabDraw: "Gambar", tabType: "Ketik", tabUpload: "Unggah gambar",
             signHere: "Tanda tangan di sini", padHint: "Tanda tangan kamu",
-            ink: "Tinta", thickness: "Ketebalan",
+            ink: "Tinta",
             penLabel: "Pulpen",
             penStandard: "Standar", penFountain: "Kaligrafi", penBrush: "Kuas lembut", penMarker: "Spidol",
-            smoothness: "Kehalusan",
             colorBlack: "Hitam", colorNavy: "Biru tua", colorBlue: "Biru", colorBrown: "Cokelat",
             toastInkColor: "Warna tinta aktif: {name}",
             toastTextColor: "Warna teks aktif: {name}",
@@ -1160,10 +1152,9 @@
             sigSub: "Draw with your mouse, finger, or stylus — the strokes stay smooth and follow your hand speed, just like writing on paper. Signatures you create are kept in the list below and can be reused while this page stays open.",
             tabDraw: "Draw", tabType: "Type", tabUpload: "Upload image",
             signHere: "Sign here", padHint: "Your signature",
-            ink: "Ink", thickness: "Thickness",
+            ink: "Ink",
             penLabel: "Pen",
             penStandard: "Standard", penFountain: "Fountain", penBrush: "Soft brush", penMarker: "Marker",
-            smoothness: "Smoothness",
             colorBlack: "Black", colorNavy: "Navy blue", colorBlue: "Blue", colorBrown: "Brown",
             toastInkColor: "Active ink color: {name}",
             toastTextColor: "Active text color: {name}",
@@ -1507,11 +1498,13 @@
            width reacts to hand speed (velocityFilterWeight):
            fountain varies a lot (thin fast strokes, tapered ends),
            marker barely varies (near-constant bold line), brush is
-           wide with very smooth width transitions. The thickness
-           slider scales the preset's widths; the smoothness slider
-           shifts the velocity smoothing, sampling density (throttle /
-           minDistance) and keeps stroke caps round, so lines stay
-           smooth instead of jagged. mouseRange is the share of the
+           wide with very smooth width transitions. Thickness and
+           smoothness are fixed, not user-adjustable: the thickness
+           scale is locked at 1.0 (each preset's natural size) and
+           smoothness at 65, which sets the velocity smoothing and
+           sampling density (throttle / minDistance) and keeps stroke
+           caps round, so lines stay smooth instead of jagged.
+           mouseRange is the share of the
            width range kept when a stroke comes from a mouse, whose
            unfiltered speed swings would otherwise make the line width
            jump around (see applyPenSettings and the mouse layer). */
@@ -1536,16 +1529,14 @@
           minDistance: 3,
           velocityFilterWeight: 0.70
         });
+        // Fixed pen tuning — thickness scale 1.0 and smoothness 65 are
+        // baked in for every preset; there are no sliders to change them.
+        var FIXED_THICKNESS_SCALE = 1.0;
+        var FIXED_SMOOTHNESS = 65;
         function applyPenSettings() {
           var preset = PEN_PRESETS[currentPen] || PEN_PRESETS.standard;
-          var thickEl = $("thickRange");
-          var smoothEl = $("smoothRange");
-          var thick = thickEl ? parseInt(thickEl.value, 10) : 5;
-          if (isNaN(thick)) thick = 5;
-          var smooth = smoothEl ? parseInt(smoothEl.value, 10) : 65;
-          if (isNaN(smooth)) smooth = 65;
-          // Thickness 5 = the preset's natural size; 1..10 scales 0.64..1.45.
-          var scale = 0.55 + thick * 0.09;
+          var smooth = FIXED_SMOOTHNESS;
+          var scale = FIXED_THICKNESS_SCALE;
           var maxW = preset.maxBase * scale;
           var minW = preset.minBase * scale;
           // Smoother = width changes ease in more gently and points are
@@ -1628,8 +1619,6 @@
           padChanged();
         });
         $("clearBtn").addEventListener("click", function () { pad.clear(); padRedoStack = []; padChanged(); });
-        $("thickRange").addEventListener("input", applyPenSettings);
-        $("smoothRange").addEventListener("input", applyPenSettings);
         document.querySelectorAll(".pen-opt").forEach(function (btn) {
           btn.addEventListener("click", function () { selectPen(btn.getAttribute("data-pen")); });
         });
