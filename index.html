@@ -259,10 +259,27 @@
       }
       .swatch i { width: 20px; height: 20px; border-radius: 50%; display: block; }
       .swatch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+      .color-name { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; color: var(--ink); margin-left: 2px; }
+      .color-name i { width: 11px; height: 11px; border-radius: 50%; display: block; border: 1px solid var(--line-strong); flex: none; }
       .spacer { flex: 1; }
       input[type="range"] { accent-color: var(--accent); }
       .thick { display: inline-flex; align-items: center; gap: 8px; }
       .thick input[type="range"] { width: 96px; min-height: 2.5rem; }
+
+      /* ---------- Pen presets ---------- */
+      .pen-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 12px; }
+      .pen-bar .tool-lbl { font-size: .82rem; color: var(--ink-soft); font-weight: 600; }
+      .pen-picker { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--surface-2); border-radius: 10px; padding: 4px; }
+      .pen-opt {
+        border: 1px solid transparent; background: transparent; color: var(--ink-soft);
+        border-radius: 8px; padding: 5px 12px 6px; min-height: 2.5rem;
+        display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+        font-weight: 600; font-size: .82rem; line-height: 1.15;
+      }
+      .pen-opt svg { width: 44px; height: 14px; display: block; color: var(--ink); }
+      .pen-opt:hover { color: var(--ink); }
+      .pen-opt[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+      .pen-desc { flex-basis: 100%; margin: 0; font-size: .83rem; color: var(--ink-faint); }
 
       /* typed signature */
       .type-row input[type="text"] {
@@ -280,7 +297,7 @@
         margin-top: 14px; border: 1.5px dashed var(--line-strong); border-radius: 12px; background: var(--paper);
         min-height: 110px; display: flex; align-items: center; justify-content: center; padding: 12px; overflow: hidden;
       }
-      .type-preview span { font-size: clamp(2rem, 7vw, 3.2rem); color: #14213d; white-space: nowrap; }
+      .type-preview span { font-size: clamp(2rem, 7vw, 3.2rem); color: #111111; white-space: nowrap; }
       .type-preview .empty { font-family: inherit; font-size: .9rem; color: #9aa79c; white-space: normal; text-align: center; }
 
       /* upload signature image */
@@ -610,6 +627,28 @@
         </div>
 
         <div id="paneDraw" role="tabpanel" aria-labelledby="tabDraw">
+          <div class="pen-bar">
+            <span class="tool-lbl" data-i18n="penLabel">Pulpen</span>
+            <div class="pen-picker" role="group" aria-label="Jenis pulpen / Pen type">
+              <button type="button" class="pen-opt" data-pen="standard" aria-pressed="true">
+                <svg viewBox="0 0 44 14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M3 11 C 13 3, 24 13, 41 6"/></svg>
+                <span data-i18n="penStandard">Standar</span>
+              </button>
+              <button type="button" class="pen-opt" data-pen="fountain" aria-pressed="false">
+                <svg viewBox="0 0 44 14" fill="currentColor" aria-hidden="true"><path d="M3 11 C 14 2, 27 12, 41 5 C 29 9, 16 12.5, 3 11 Z"/></svg>
+                <span data-i18n="penFountain">Kaligrafi</span>
+              </button>
+              <button type="button" class="pen-opt" data-pen="brush" aria-pressed="false">
+                <svg viewBox="0 0 44 14" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" opacity=".72" aria-hidden="true"><path d="M4 10 C 14 4, 25 12, 40 6"/></svg>
+                <span data-i18n="penBrush">Kuas lembut</span>
+              </button>
+              <button type="button" class="pen-opt" data-pen="marker" aria-pressed="false">
+                <svg viewBox="0 0 44 14" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="square" aria-hidden="true"><path d="M4 9 C 14 5, 25 11, 40 7"/></svg>
+                <span data-i18n="penMarker">Spidol</span>
+              </button>
+            </div>
+            <p class="pen-desc" id="penDesc">Goresan seimbang dan natural — pilihan aman untuk tanda tangan sehari-hari.</p>
+          </div>
           <div class="pad-frame" id="padFrame">
             <canvas id="pad"></canvas>
             <div class="baseline"><span data-i18n="signHere">Tanda tangan di sini</span></div>
@@ -618,13 +657,17 @@
           <div class="pad-tools">
             <div class="swatches" role="group" aria-label="Warna tinta">
               <span class="lbl" data-i18n="ink">Tinta</span>
-              <button class="swatch" data-color="#14213d" aria-pressed="true" aria-label="Tinta biru tua"><i style="background:#14213d"></i></button>
-              <button class="swatch" data-color="#111111" aria-pressed="false" aria-label="Tinta hitam"><i style="background:#111111"></i></button>
+              <button class="swatch" data-color="#111111" aria-pressed="true" aria-label="Tinta hitam"><i style="background:#111111"></i></button>
+              <button class="swatch" data-color="#14213d" aria-pressed="false" aria-label="Tinta biru tua"><i style="background:#14213d"></i></button>
               <button class="swatch" data-color="#1d4ed8" aria-pressed="false" aria-label="Tinta biru"><i style="background:#1d4ed8"></i></button>
               <button class="swatch" data-color="#7c2d12" aria-pressed="false" aria-label="Tinta cokelat"><i style="background:#7c2d12"></i></button>
+              <span class="color-name" id="drawColorName"><i style="background:#111111"></i><span>Hitam</span></span>
             </div>
             <label class="thick"><span class="tool-lbl" data-i18n="thickness">Ketebalan</span>
               <input type="range" id="thickRange" min="1" max="10" step="1" value="5" aria-label="Ketebalan goresan" />
+            </label>
+            <label class="thick"><span class="tool-lbl" data-i18n="smoothness">Kehalusan</span>
+              <input type="range" id="smoothRange" min="0" max="100" step="5" value="65" aria-label="Kehalusan goresan" />
             </label>
             <div class="spacer"></div>
             <button class="btn" id="undoBtn" disabled>
@@ -655,9 +698,10 @@
           </div>
           <div class="swatches" role="group" aria-label="Warna tinta tanda tangan ketik" style="margin-top:12px">
             <span class="lbl" data-i18n="ink">Tinta</span>
-            <button class="swatch type-swatch" data-color="#14213d" aria-pressed="true" aria-label="Tinta biru tua"><i style="background:#14213d"></i></button>
-            <button class="swatch type-swatch" data-color="#111111" aria-pressed="false" aria-label="Tinta hitam"><i style="background:#111111"></i></button>
+            <button class="swatch type-swatch" data-color="#111111" aria-pressed="true" aria-label="Tinta hitam"><i style="background:#111111"></i></button>
+            <button class="swatch type-swatch" data-color="#14213d" aria-pressed="false" aria-label="Tinta biru tua"><i style="background:#14213d"></i></button>
             <button class="swatch type-swatch" data-color="#1d4ed8" aria-pressed="false" aria-label="Tinta biru"><i style="background:#1d4ed8"></i></button>
+            <span class="color-name" id="typeColorName"><i style="background:#111111"></i><span>Hitam</span></span>
           </div>
           <div class="type-preview" id="typePreview"><span class="empty" data-i18n="typePreviewEmpty">Pratinjau tanda tanganmu muncul di sini</span></div>
           <div class="pad-tools">
@@ -783,6 +827,7 @@
           </label>
           <span class="ctl" id="colorCtl" hidden><span data-i18n="ctlColor">Warna</span>
             <span class="mini-swatches" role="group" aria-label="Warna teks" id="stampColors"></span>
+            <span class="color-name" id="stampColorName"><i style="background:#111111"></i><span>Hitam</span></span>
           </span>
           <label class="ctl"><span data-i18n="ctlSize">Ukuran</span>
             <input type="range" id="stampSize" min="4" max="70" step="0.5" />
@@ -985,6 +1030,16 @@
             tabDraw: "Gambar", tabType: "Ketik", tabUpload: "Unggah gambar",
             signHere: "Tanda tangan di sini", padHint: "Tanda tangan kamu",
             ink: "Tinta", thickness: "Ketebalan",
+            penLabel: "Pulpen",
+            penStandard: "Standar", penFountain: "Kaligrafi", penBrush: "Kuas lembut", penMarker: "Spidol",
+            smoothness: "Kehalusan",
+            colorBlack: "Hitam", colorNavy: "Biru tua", colorBlue: "Biru", colorBrown: "Cokelat",
+            toastInkColor: "Warna tinta aktif: {name}",
+            toastTextColor: "Warna teks aktif: {name}",
+            penDescStandard: "Goresan seimbang dan natural — pilihan aman untuk tanda tangan sehari-hari.",
+            penDescFountain: "Lebar garis mengikuti kecepatan tangan dengan ujung meruncing — terasa seperti pulpen fountain asli.",
+            penDescBrush: "Goresan lebar dan lembut dengan transisi sangat halus — cocok untuk tanda tangan besar yang mengalir.",
+            penDescMarker: "Garis tebal yang konsisten dari awal sampai akhir — tegas dan mudah dibaca.",
             undo: "Urungkan", redo: "Ulangi", clear: "Hapus",
             useSig: "Pakai tanda tangan ini", useImg: "Pakai gambar ini",
             typePh: "Ketik namamu, mis. Adi Prastyo",
@@ -1106,6 +1161,16 @@
             tabDraw: "Draw", tabType: "Type", tabUpload: "Upload image",
             signHere: "Sign here", padHint: "Your signature",
             ink: "Ink", thickness: "Thickness",
+            penLabel: "Pen",
+            penStandard: "Standard", penFountain: "Fountain", penBrush: "Soft brush", penMarker: "Marker",
+            smoothness: "Smoothness",
+            colorBlack: "Black", colorNavy: "Navy blue", colorBlue: "Blue", colorBrown: "Brown",
+            toastInkColor: "Active ink color: {name}",
+            toastTextColor: "Active text color: {name}",
+            penDescStandard: "Balanced, natural strokes — a safe everyday choice for signatures.",
+            penDescFountain: "Line width follows your hand speed with tapered ends — feels like a real fountain pen.",
+            penDescBrush: "Wide, soft strokes with very smooth transitions — great for large, flowing signatures.",
+            penDescMarker: "Bold, consistent lines from start to finish — firm and easy to read.",
             undo: "Undo", redo: "Redo", clear: "Clear",
             useSig: "Use this signature", useImg: "Use this image",
             typePh: "Type your name, e.g. Adi Prastyo",
@@ -1257,6 +1322,8 @@
           // Re-render the dynamic regions in the new language.
           if (typeof renderLib === "function") renderLib();
           if (typeof refreshType === "function") refreshType();
+          if (typeof updatePenDesc === "function") updatePenDesc();
+          if (typeof updateColorNameLabels === "function") updateColorNameLabels();
           if (typeof state !== "undefined" && state.pdfDoc) {
             $("pageInfo").textContent = t("pageInfo", { cur: state.page, total: state.pageCount });
             $("fileMeta").textContent = t("fileMeta", { pages: state.pageCount, size: fmtKB(state.pdfSize || 0) });
@@ -1436,21 +1503,104 @@
 
         /* ================= Draw pad ================= */
         var padCanvas = $("pad");
+        /* Pen presets — each pairs a width range with how strongly the
+           width reacts to hand speed (velocityFilterWeight):
+           fountain varies a lot (thin fast strokes, tapered ends),
+           marker barely varies (near-constant bold line), brush is
+           wide with very smooth width transitions. The thickness
+           slider scales the preset's widths; the smoothness slider
+           shifts the velocity smoothing, sampling density (throttle /
+           minDistance) and keeps stroke caps round, so lines stay
+           smooth instead of jagged. mouseRange is the share of the
+           width range kept when a stroke comes from a mouse, whose
+           unfiltered speed swings would otherwise make the line width
+           jump around (see applyPenSettings and the mouse layer). */
+        var PEN_PRESETS = {
+          standard: { minBase: 0.65, maxBase: 2.8, vel: 0.70, mouseRange: 0.45 },
+          fountain: { minBase: 0.12, maxBase: 3.9, vel: 0.45, mouseRange: 0.65 },
+          brush: { minBase: 1.05, maxBase: 4.9, vel: 0.88, mouseRange: 0.70 },
+          marker: { minBase: 2.95, maxBase: 3.35, vel: 0.92, mouseRange: 1 }
+        };
+        var PEN_DESC_KEYS = {
+          standard: "penDescStandard", fountain: "penDescFountain",
+          brush: "penDescBrush", marker: "penDescMarker"
+        };
+        var currentPen = "standard";
+        var lastPointerType = "touch";
         var pad = new SignaturePad(padCanvas, {
-          penColor: "#14213d",
+          penColor: "#111111",
           backgroundColor: "rgba(255,255,255,0)",
-          minWidth: 0.7,
+          minWidth: 0.65,
           maxWidth: 2.8,
-          throttle: 8,
-          velocityFilterWeight: 0.75
+          throttle: 5,
+          minDistance: 3,
+          velocityFilterWeight: 0.70
         });
+        function applyPenSettings() {
+          var preset = PEN_PRESETS[currentPen] || PEN_PRESETS.standard;
+          var thickEl = $("thickRange");
+          var smoothEl = $("smoothRange");
+          var thick = thickEl ? parseInt(thickEl.value, 10) : 5;
+          if (isNaN(thick)) thick = 5;
+          var smooth = smoothEl ? parseInt(smoothEl.value, 10) : 65;
+          if (isNaN(smooth)) smooth = 65;
+          // Thickness 5 = the preset's natural size; 1..10 scales 0.64..1.45.
+          var scale = 0.55 + thick * 0.09;
+          var maxW = preset.maxBase * scale;
+          var minW = preset.minBase * scale;
+          // Smoother = width changes ease in more gently and points are
+          // sampled more densely, so curves don't break into segments.
+          var vfw = clamp(preset.vel + (smooth - 65) * 0.0035, 0.15, 0.97);
+          var thr = Math.round(clamp(14 - smooth * 0.14, 0, 14));
+          var minD = clamp(6 - smooth * 0.05, 1, 6);
+          if (lastPointerType === "mouse") {
+            // A mouse reports no pressure and its speed swings wildly,
+            // so compress the width range around its middle (the line
+            // stops jumping between hair-thin and blob-thick) and lean
+            // the velocity filter harder on history, easing every width
+            // change. Points are fed densely by the mouse layer below,
+            // so no sampling throttle/distance applies.
+            var midW = (maxW + minW) / 2;
+            var halfW = (maxW - minW) / 2 * (preset.mouseRange != null ? preset.mouseRange : 0.55);
+            maxW = midW + halfW;
+            minW = Math.max(0.08, midW - halfW);
+            vfw = clamp(vfw * 0.68, 0.08, 0.95);
+            thr = 0;
+            minD = 1;
+          }
+          pad.maxWidth = maxW;
+          pad.minWidth = minW;
+          pad.velocityFilterWeight = vfw;
+          pad.throttle = thr;
+          pad.minDistance = minD;
+          pad.dotSize = (minW + maxW) / 2;
+          var pctx = padCanvas.getContext("2d");
+          pctx.lineCap = "round";
+          pctx.lineJoin = "round";
+        }
+        function updatePenDesc() {
+          var el = $("penDesc");
+          if (el) el.textContent = t(PEN_DESC_KEYS[currentPen] || "penDescStandard");
+        }
+        function selectPen(name) {
+          if (!PEN_PRESETS[name]) return;
+          currentPen = name;
+          document.querySelectorAll(".pen-opt").forEach(function (b) {
+            b.setAttribute("aria-pressed", b.getAttribute("data-pen") === name ? "true" : "false");
+          });
+          applyPenSettings();
+          updatePenDesc();
+        }
         var padRedoStack = [];
         function sizePadCanvas() {
           var ratio = Math.max(window.devicePixelRatio || 1, 1);
           var data = pad.toData();
           padCanvas.width = padCanvas.offsetWidth * ratio;
           padCanvas.height = padCanvas.offsetHeight * ratio;
-          padCanvas.getContext("2d").scale(ratio, ratio);
+          var padCtx = padCanvas.getContext("2d");
+          padCtx.scale(ratio, ratio);
+          padCtx.lineCap = "round";
+          padCtx.lineJoin = "round";
           pad.clear();
           if (data && data.length) pad.fromData(data);
         }
@@ -1478,16 +1628,129 @@
           padChanged();
         });
         $("clearBtn").addEventListener("click", function () { pad.clear(); padRedoStack = []; padChanged(); });
-        $("thickRange").addEventListener("input", function () {
-          var t = parseInt(this.value, 10); // 1..10
-          pad.maxWidth = 1.2 + t * 0.34;
-          pad.minWidth = 0.3 + t * 0.09;
+        $("thickRange").addEventListener("input", applyPenSettings);
+        $("smoothRange").addEventListener("input", applyPenSettings);
+        document.querySelectorAll(".pen-opt").forEach(function (btn) {
+          btn.addEventListener("click", function () { selectPen(btn.getAttribute("data-pen")); });
         });
+        applyPenSettings();
+        updatePenDesc();
+
+        /* ---------- Mouse stroke smoothing ----------
+           A mouse has no pressure data and browsers deliver its moves
+           sparsely and in angular steps, which is why mouse strokes
+           look jagged next to finger/stylus ones. While a mouse stroke
+           is active this layer takes over the move feed: the pad's own
+           move handler is stopped and every raw sample the browser
+           captured (getCoalescedEvents), plus light interpolation
+           across wide gaps, is fed straight into the pad, bypassing
+           its sampling throttle. The pad stamps points with the wall
+           clock, which would flatten the velocity of samples processed
+           within the same millisecond, so fed points carry their real
+           event timestamps instead. Touch and stylus input keeps the
+           library's untouched code path and feel. */
+        var mouseLayerOk = (typeof pad._strokeUpdate === "function");
+        var mouseStrokeActive = false;
+        var lastFedPoint = null; // {x, y, t} client coords / epoch ms
+        var feedTimeOverride = null;
+        if (mouseLayerOk && typeof pad._createPoint === "function") {
+          var origCreatePoint = pad._createPoint.bind(pad);
+          pad._createPoint = function (x, y, pressure) {
+            var pt = origCreatePoint(x, y, pressure);
+            if (feedTimeOverride != null) pt.time = feedTimeOverride;
+            return pt;
+          };
+        }
+        function feedMousePoint(x, y, pressure, timeMs) {
+          // Densify wide gaps so a sharp direction change renders as a
+          // run of short curve anchors instead of one hard corner.
+          if (lastFedPoint) {
+            var dx = x - lastFedPoint.x, dy = y - lastFedPoint.y;
+            var gap = Math.sqrt(dx * dx + dy * dy);
+            var steps = Math.min(8, Math.floor(gap / 3));
+            for (var i = 1; i <= steps; i++) {
+              var f = i / (steps + 1);
+              feedTimeOverride = Math.round(lastFedPoint.t + (timeMs - lastFedPoint.t) * f);
+              pad._strokeUpdate({
+                clientX: lastFedPoint.x + dx * f,
+                clientY: lastFedPoint.y + dy * f,
+                pressure: pressure
+              });
+            }
+          }
+          feedTimeOverride = Math.round(timeMs);
+          pad._strokeUpdate({ clientX: x, clientY: y, pressure: pressure });
+          feedTimeOverride = null;
+          lastFedPoint = { x: x, y: y, t: timeMs };
+        }
+        padCanvas.addEventListener("pointerdown", function (e) {
+          lastPointerType = e.pointerType || "mouse";
+          applyPenSettings();
+          if (mouseLayerOk && lastPointerType === "mouse" && (e.buttons & 1)) {
+            mouseStrokeActive = true;
+            lastFedPoint = {
+              x: e.clientX, y: e.clientY,
+              t: performance.timeOrigin + e.timeStamp
+            };
+          }
+        }, true);
+        window.addEventListener("pointermove", function (e) {
+          if (!mouseStrokeActive || e.pointerType !== "mouse") return;
+          if (!(e.buttons & 1)) { mouseStrokeActive = false; return; }
+          e.stopImmediatePropagation();
+          e.preventDefault();
+          var samples = (typeof e.getCoalescedEvents === "function") ? e.getCoalescedEvents() : null;
+          if (!samples || !samples.length) samples = [e];
+          for (var i = 0; i < samples.length; i++) {
+            feedMousePoint(samples[i].clientX, samples[i].clientY, samples[i].pressure, performance.timeOrigin + samples[i].timeStamp);
+          }
+        }, true);
+        function endMouseStroke() { mouseStrokeActive = false; lastFedPoint = null; }
+        window.addEventListener("pointerup", endMouseStroke, true);
+        window.addEventListener("pointercancel", endMouseStroke, true);
+
+        /* ---------- Active color name hint ----------
+           Swatch circles alone don't say which color is active, so
+           each color group carries a small label naming the active
+           color (in the current UI language), and pressing the same
+           swatch a third time in a row also pops a toast naming it. */
+        var COLOR_NAME_KEYS = {
+          "#111111": "colorBlack", "#14213d": "colorNavy",
+          "#1d4ed8": "colorBlue", "#7c2d12": "colorBrown"
+        };
+        function colorName(hex) {
+          return t(COLOR_NAME_KEYS[String(hex || "").toLowerCase()] || "colorBlack");
+        }
+        function paintColorName(el, hex) {
+          if (!el) return;
+          el.querySelector("span").textContent = colorName(hex);
+          el.querySelector("i").style.background = hex;
+        }
+        function updateColorNameLabels() {
+          paintColorName($("drawColorName"), pad.penColor);
+          paintColorName($("typeColorName"), typeColor);
+          var st = selectedStamp();
+          if (st && st.kind === "text") paintColorName($("stampColorName"), st.color);
+        }
+        function makePressTracker() { return { hex: null, count: 0, stampId: null }; }
+        function trackSwatchPress(tracker, hex, toastKey) {
+          if (tracker.hex === hex) tracker.count++;
+          else { tracker.hex = hex; tracker.count = 1; }
+          if (tracker.count >= 3) {
+            tracker.count = 0;
+            toast(t(toastKey, { name: colorName(hex) }));
+          }
+        }
+        var drawPressTracker = makePressTracker();
+        var typePressTracker = makePressTracker();
+
         document.querySelectorAll("#paneDraw .swatch").forEach(function (btn) {
           btn.addEventListener("click", function () {
             document.querySelectorAll("#paneDraw .swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
             btn.setAttribute("aria-pressed", "true");
             pad.penColor = btn.getAttribute("data-color");
+            paintColorName($("drawColorName"), pad.penColor);
+            trackSwatchPress(drawPressTracker, pad.penColor, "toastInkColor");
           });
         });
         $("useDrawBtn").addEventListener("click", function () {
@@ -1500,7 +1763,7 @@
 
         /* ================= Typed signature ================= */
         var typeFont = "'Great Vibes', cursive";
-        var typeColor = "#14213d";
+        var typeColor = "#111111";
         function refreshType() {
           var name = $("typeInput").value.trim();
           var prev = $("typePreview");
@@ -1531,6 +1794,8 @@
             document.querySelectorAll(".type-swatch").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
             btn.setAttribute("aria-pressed", "true");
             typeColor = btn.getAttribute("data-color");
+            paintColorName($("typeColorName"), typeColor);
+            trackSwatchPress(typePressTracker, typeColor, "toastInkColor");
             refreshType();
           });
         });
@@ -1612,13 +1877,13 @@
              text, fontPt, color    (kind 'text'; fontPt at origin page height)
              originPageH            (kind 'text', points)
            } */
-        var TEXT_COLORS = ["#14213d", "#111111", "#1d4ed8", "#7c2d12"];
+        var TEXT_COLORS = ["#111111", "#14213d", "#1d4ed8", "#7c2d12"];
         function makeStamp(props) {
           var st = {
             id: uid("stamp"), kind: "sig", page: state.page - 1, allPages: false,
             fx: 0.35, fy: 0.40, fw: 0.30, opacity: 1,
             sigId: null, aspect: 3,
-            text: "", fontPt: 13, color: "#14213d", originPageH: state.pageHpt || 842
+            text: "", fontPt: 13, color: "#111111", originPageH: state.pageHpt || 842
           };
           for (var k in props) st[k] = props[k];
           return st;
@@ -2084,14 +2349,21 @@
           $("stampOpacity").value = Math.round(st.opacity * 100);
           $("stampOpacityVal").textContent = Math.round(st.opacity * 100) + "%";
         }
+        var stampPressTracker = makePressTracker();
         function renderStampColors(st) {
           var box = $("stampColors");
           box.innerHTML = "";
+          if (stampPressTracker.stampId !== st.id) {
+            stampPressTracker.stampId = st.id;
+            stampPressTracker.hex = st.color;
+            stampPressTracker.count = 0;
+          }
+          paintColorName($("stampColorName"), st.color);
           TEXT_COLORS.forEach(function (hex) {
             var b = document.createElement("button");
             b.className = "mini-swatch";
             b.setAttribute("aria-pressed", st.color === hex ? "true" : "false");
-            b.setAttribute("aria-label", "Warna teks " + hex);
+            b.setAttribute("aria-label", colorName(hex));
             var i = document.createElement("i");
             i.style.background = hex;
             b.appendChild(i);
@@ -2100,6 +2372,7 @@
               layoutOverlays();
               renderStampColors(st);
               pushHistory();
+              trackSwatchPress(stampPressTracker, hex, "toastTextColor");
             });
             box.appendChild(b);
           });
