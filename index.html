@@ -236,9 +236,7 @@
       /* ---------- Signature pad ---------- */
       .pad-frame {
         position: relative; border: 1.5px dashed var(--line-strong); border-radius: 12px;
-        background:
-          repeating-linear-gradient(to bottom, transparent 0 47px, rgba(120, 135, 120, .18) 47px 48px),
-          var(--paper);
+        background: var(--paper);
         overflow: hidden;
       }
       .pad-frame canvas { display: block; width: 100%; height: 240px; touch-action: none; cursor: crosshair; }
@@ -247,8 +245,6 @@
         color: #9aa79c; font-family: "Caveat", cursive; font-size: 1.7rem; pointer-events: none;
       }
       .pad-frame.has-ink .pad-hint { display: none; }
-      .baseline { position: absolute; left: 24px; right: 24px; bottom: 52px; border-bottom: 1.5px solid #c8cfc6; pointer-events: none; }
-      .baseline span { position: absolute; left: 0; bottom: 4px; font-size: .72rem; color: #9aa79c; letter-spacing: .04em; }
 
       .pad-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 14px; }
       .swatches { display: flex; gap: 8px; align-items: center; }
@@ -259,7 +255,10 @@
       }
       .swatch i { width: 20px; height: 20px; border-radius: 50%; display: block; }
       .swatch[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-      .color-name { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; color: var(--ink); margin-left: 2px; }
+      /* Fixed-width slot: the active color's name changes length between
+         colors and languages, and it must never push the controls beside
+         it sideways — the toolbar layout stays static. */
+      .color-name { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 700; color: var(--ink); margin-left: 2px; min-width: 118px; flex: none; white-space: nowrap; }
       .color-name i { width: 11px; height: 11px; border-radius: 50%; display: block; border: 1px solid var(--line-strong); flex: none; }
       .spacer { flex: 1; }
       input[type="range"] { accent-color: var(--accent); }
@@ -278,7 +277,15 @@
       .pen-opt svg { width: 44px; height: 14px; display: block; color: var(--ink); }
       .pen-opt:hover { color: var(--ink); }
       .pen-opt[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--accent); box-shadow: 0 1px 4px rgba(0,0,0,.12); }
-      .pen-desc { flex-basis: 100%; margin: 0; font-size: .83rem; color: var(--ink-faint); }
+      /* Reserved two-line height: preset descriptions differ in length,
+         and the pad below must not jump up or down when the pen changes. */
+      .pen-desc { flex-basis: 100%; margin: 0; font-size: .83rem; color: var(--ink-faint); min-height: 2.5rem; }
+      /* Thickness / smoothness sliders: fixed label and value widths so
+         nothing in the row shifts while values or language change. */
+      .slider-group { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+      .slider-group .tool-lbl { min-width: 88px; flex: none; white-space: nowrap; }
+      .slider-group input[type="range"] { width: 132px; flex: none; }
+      .slider-val { min-width: 30px; flex: none; text-align: right; font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 
       /* typed signature */
       .type-row input[type="text"] {
@@ -647,11 +654,20 @@
               </button>
             </div>
             <p class="pen-desc" id="penDesc">Goresan seimbang dan natural — pilihan aman untuk tanda tangan sehari-hari.</p>
+            <div class="slider-group">
+              <label class="tool-lbl" for="thicknessRange" data-i18n="thicknessLabel">Ketebalan</label>
+              <input type="range" id="thicknessRange" min="1" max="10" step="1" value="5" />
+              <span class="slider-val" id="thicknessVal">5</span>
+            </div>
+            <div class="slider-group">
+              <label class="tool-lbl" for="smoothRange" data-i18n="smoothnessLabel">Kehalusan</label>
+              <input type="range" id="smoothRange" min="0" max="100" step="1" value="65" />
+              <span class="slider-val" id="smoothVal">65</span>
+            </div>
           </div>
           <div class="pad-frame" id="padFrame">
             <canvas id="pad"></canvas>
-            <div class="baseline"><span data-i18n="signHere">Tanda tangan di sini</span></div>
-            <div class="pad-hint" data-i18n="padHint">Tanda tangan kamu</div>
+            <div class="pad-hint" data-i18n="padHint">Your Signature</div>
           </div>
           <div class="pad-tools">
             <div class="swatches" role="group" aria-label="Warna tinta">
@@ -1021,9 +1037,10 @@
             sigTitle: "1 · Buat tanda tangan",
             sigSub: "Gambar dengan mouse, jari, atau stylus — goresannya halus mengikuti kecepatan tanganmu, seperti menulis di kertas. Tanda tangan yang kamu buat tersimpan di daftar di bawah dan bisa dipakai berkali-kali selama halaman ini terbuka.",
             tabDraw: "Gambar", tabType: "Ketik", tabUpload: "Unggah gambar",
-            signHere: "Tanda tangan di sini", padHint: "Tanda tangan kamu",
+            signHere: "Tanda tangan di sini", padHint: "Your Signature",
             ink: "Tinta",
             penLabel: "Pulpen",
+            thicknessLabel: "Ketebalan", smoothnessLabel: "Kehalusan",
             penStandard: "Standar", penFountain: "Kaligrafi", penBrush: "Kuas lembut", penMarker: "Spidol",
             colorBlack: "Hitam", colorNavy: "Biru tua", colorBlue: "Biru", colorBrown: "Cokelat",
             toastInkColor: "Warna tinta aktif: {name}",
@@ -1151,9 +1168,10 @@
             sigTitle: "1 · Create your signature",
             sigSub: "Draw with your mouse, finger, or stylus — the strokes stay smooth and follow your hand speed, just like writing on paper. Signatures you create are kept in the list below and can be reused while this page stays open.",
             tabDraw: "Draw", tabType: "Type", tabUpload: "Upload image",
-            signHere: "Sign here", padHint: "Your signature",
+            signHere: "Sign here", padHint: "Your Signature",
             ink: "Ink",
             penLabel: "Pen",
+            thicknessLabel: "Thickness", smoothnessLabel: "Smoothness",
             penStandard: "Standard", penFountain: "Fountain", penBrush: "Soft brush", penMarker: "Marker",
             colorBlack: "Black", colorNavy: "Navy blue", colorBlue: "Blue", colorBrown: "Brown",
             toastInkColor: "Active ink color: {name}",
@@ -1399,7 +1417,12 @@
 
         /* ================= Canvas trimming ================= */
         // Crop transparent margins; returns {url, aspect} or null when blank.
-        function trimCanvas(src) {
+        // The crop is exported supersampled (exportScale x, high-quality
+        // smoothing) so the signature image that lands on the PDF keeps
+        // anti-aliased edges at any stamp size instead of going jagged.
+        // Uploaded photos pass 1: upscaling a photo adds no real detail.
+        function trimCanvas(src, exportScale) {
+          if (!exportScale || exportScale < 1) exportScale = 2;
           var w = src.width, h = src.height;
           var ctx = src.getContext("2d");
           var img;
@@ -1421,8 +1444,11 @@
           maxX = Math.min(w - 1, maxX + padPx); maxY = Math.min(h - 1, maxY + padPx);
           var cw = maxX - minX + 1, ch = maxY - minY + 1;
           var out = document.createElement("canvas");
-          out.width = cw; out.height = ch;
-          out.getContext("2d").drawImage(src, minX, minY, cw, ch, 0, 0, cw, ch);
+          out.width = Math.round(cw * exportScale); out.height = Math.round(ch * exportScale);
+          var octx = out.getContext("2d");
+          octx.imageSmoothingEnabled = true;
+          octx.imageSmoothingQuality = "high";
+          octx.drawImage(src, minX, minY, cw, ch, 0, 0, out.width, out.height);
           return { url: out.toDataURL("image/png"), aspect: cw / ch };
         }
 
@@ -1498,12 +1524,11 @@
            width reacts to hand speed (velocityFilterWeight):
            fountain varies a lot (thin fast strokes, tapered ends),
            marker barely varies (near-constant bold line), brush is
-           wide with very smooth width transitions. Thickness and
-           smoothness are fixed, not user-adjustable: the thickness
-           scale is locked at 1.0 (each preset's natural size) and
-           smoothness at 65, which sets the velocity smoothing and
-           sampling density (throttle / minDistance) and keeps stroke
-           caps round, so lines stay smooth instead of jagged.
+           wide with very smooth width transitions. The Thickness and
+           Smoothness sliders scale each preset: thickness multiplies
+           the width range, smoothness sets the velocity smoothing and
+           sampling density (throttle / minDistance); stroke caps stay
+           round, so lines stay smooth instead of jagged.
            mouseRange is the share of the
            width range kept when a stroke comes from a mouse, whose
            unfiltered speed swings would otherwise make the line width
@@ -1529,21 +1554,28 @@
           minDistance: 3,
           velocityFilterWeight: 0.70
         });
-        // Fixed pen tuning — thickness scale 1.0 and smoothness 65 are
-        // baked in for every preset; there are no sliders to change them.
-        var FIXED_THICKNESS_SCALE = 1.0;
-        var FIXED_SMOOTHNESS = 65;
+        // Pen tuning comes from the two sliders: thickness 1–10 maps to
+        // a width scale of 0.2–2.0 (default 5 = scale 1.0, each preset's
+        // natural size) and smoothness 0–100 (default 65) drives the
+        // velocity smoothing and sampling density below.
+        var thicknessRange = $("thicknessRange");
+        var smoothRange = $("smoothRange");
         function applyPenSettings() {
           var preset = PEN_PRESETS[currentPen] || PEN_PRESETS.standard;
-          var smooth = FIXED_SMOOTHNESS;
-          var scale = FIXED_THICKNESS_SCALE;
+          var smooth = parseFloat(smoothRange.value);
+          if (isNaN(smooth)) smooth = 65;
+          var thickStep = parseFloat(thicknessRange.value);
+          if (isNaN(thickStep)) thickStep = 5;
+          var scale = thickStep / 5;
           var maxW = preset.maxBase * scale;
           var minW = preset.minBase * scale;
           // Smoother = width changes ease in more gently and points are
           // sampled more densely, so curves don't break into segments.
-          var vfw = clamp(preset.vel + (smooth - 65) * 0.0035, 0.15, 0.97);
-          var thr = Math.round(clamp(14 - smooth * 0.14, 0, 14));
-          var minD = clamp(6 - smooth * 0.05, 1, 6);
+          // The top of the range leans much harder on the velocity
+          // history, which is what makes strokes feel liquid-smooth.
+          var vfw = clamp(preset.vel + (smooth - 65) * 0.0045, 0.15, 0.97);
+          var thr = Math.round(clamp(12 - smooth * 0.12, 0, 12));
+          var minD = clamp(5 - smooth * 0.045, 0.5, 5);
           if (lastPointerType === "mouse") {
             // A mouse reports no pressure and its speed swings wildly,
             // so compress the width range around its middle (the line
@@ -1555,7 +1587,7 @@
             var halfW = (maxW - minW) / 2 * (preset.mouseRange != null ? preset.mouseRange : 0.55);
             maxW = midW + halfW;
             minW = Math.max(0.08, midW - halfW);
-            vfw = clamp(vfw * 0.68, 0.08, 0.95);
+            vfw = clamp(vfw * 0.6, 0.08, 0.95);
             thr = 0;
             minD = 1;
           }
@@ -1584,7 +1616,11 @@
         }
         var padRedoStack = [];
         function sizePadCanvas() {
-          var ratio = Math.max(window.devicePixelRatio || 1, 1);
+          // Render at a minimum of 2x the CSS size even on 1x displays:
+          // the pad bitmap is what gets exported as the signature image,
+          // and supersampling is what keeps stroke edges anti-aliased
+          // instead of jagged when the stamp is scaled on the PDF page.
+          var ratio = Math.max(window.devicePixelRatio || 1, 2);
           var data = pad.toData();
           padCanvas.width = padCanvas.offsetWidth * ratio;
           padCanvas.height = padCanvas.offsetHeight * ratio;
@@ -1622,6 +1658,14 @@
         document.querySelectorAll(".pen-opt").forEach(function (btn) {
           btn.addEventListener("click", function () { selectPen(btn.getAttribute("data-pen")); });
         });
+        thicknessRange.addEventListener("input", function () {
+          $("thicknessVal").textContent = thicknessRange.value;
+          applyPenSettings();
+        });
+        smoothRange.addEventListener("input", function () {
+          $("smoothVal").textContent = smoothRange.value;
+          applyPenSettings();
+        });
         applyPenSettings();
         updatePenDesc();
 
@@ -1656,7 +1700,7 @@
           if (lastFedPoint) {
             var dx = x - lastFedPoint.x, dy = y - lastFedPoint.y;
             var gap = Math.sqrt(dx * dx + dy * dy);
-            var steps = Math.min(8, Math.floor(gap / 3));
+            var steps = Math.min(12, Math.floor(gap / 2));
             for (var i = 1; i <= steps; i++) {
               var f = i / (steps + 1);
               feedTimeOverride = Math.round(lastFedPoint.t + (timeMs - lastFedPoint.t) * f);
@@ -1791,18 +1835,20 @@
         $("useTypeBtn").addEventListener("click", function () {
           var name = $("typeInput").value.trim();
           if (!name) return;
-          var fontSpec = "100px " + typeFont;
+          // Rendered at 200px (2x) natively so the typed signature image
+          // is genuinely high-resolution, not an upscale, when stamped.
+          var fontSpec = "200px " + typeFont;
           document.fonts.load(fontSpec).then(function () {
             var c = document.createElement("canvas");
             var ctx = c.getContext("2d");
             ctx.font = fontSpec;
             var tw = Math.ceil(ctx.measureText(name).width);
-            c.width = tw + 80; c.height = 200;
+            c.width = tw + 160; c.height = 400;
             ctx = c.getContext("2d");
             ctx.font = fontSpec;
             ctx.fillStyle = typeColor;
             ctx.textBaseline = "middle";
-            ctx.fillText(name, 40, 104);
+            ctx.fillText(name, 80, 208);
             var sig = addSignature(trimCanvas(c), "type");
             if (sig) {
               toast(t("toastTypeAdded"));
@@ -1828,7 +1874,7 @@
             c.height = Math.round(img.naturalHeight * scale);
             c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
             URL.revokeObjectURL(url);
-            uploadedSigResult = trimCanvas(c) || { url: c.toDataURL("image/png"), aspect: c.width / c.height };
+            uploadedSigResult = trimCanvas(c, 1) || { url: c.toDataURL("image/png"), aspect: c.width / c.height };
             $("sigUploadImg").src = uploadedSigResult.url;
             $("sigUploadPreview").classList.add("show");
             $("useUploadBtn").disabled = false;
